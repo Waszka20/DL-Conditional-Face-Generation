@@ -1,6 +1,6 @@
 ## Conditional Face Generation with CVAE (CelebA)
 
-This project explores **conditional generative modeling** using a Conditional Variational Autoencoder (CVAE) trained on the CelebA dataset. The goal is to generate human face images with controllable attributes such as *smiling*, *eyeglasses*, or *hair color*.
+This project explores **conditional generative modeling** using a Conditional Variational Autoencoder (CVAE) trained on the CelebA dataset(https://www.kaggle.com/datasets/jessicali9530/celeba-dataset/data). The goal is to generate human face images with controllable attributes such as *smiling*, *eyeglasses*, or *hair color*.
 
 We will try to apply **multi-attribute conditioning**, where the model takes a vector of facial features as input. This would allows us to generate faces with combinations of attributes (e.g., “smiling + glasses”) and experiment with how well the model can control specific features.
 
