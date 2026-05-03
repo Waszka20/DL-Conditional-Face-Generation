@@ -8,7 +8,7 @@ We will try to apply **multi-attribute conditioning**, where the model takes a v
 
 * Learn a meaningful **latent space representation** of faces
 * Generate images based on selected attributes
-* Evaluate generation quality (both visually and with simple metrics)
+* Evaluate generation quality
 
 
 This project is part of a deep learning course and focuses on gaining hands-on experience with generative models and conditional learning on a more realistic dataset.
