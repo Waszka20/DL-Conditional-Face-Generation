@@ -7,7 +7,7 @@ import os
 import kagglehub
 
 class CelebADataset(Dataset):
-    def __init__(self, split="train", SELECTED_ATTRIBUTES=None, image_size=128):
+    def __init__(self, split="train", SELECTED_ATTRIBUTES=None, image_size=64):
         self.path = kagglehub.dataset_download("jessicali9530/celeba-dataset")
         self.image_path = os.path.join(self.path, "img_align_celeba", "img_align_celeba")
         self.image_size = image_size
@@ -30,7 +30,7 @@ class CelebADataset(Dataset):
         self.images = split_df[split_df["partition"] == partition_map[split]]["image_id"].values
         
         self.transform = transforms.Compose([
-            #Originally 218x178, resize to 128x128 for faster training
+            #Originally 218x178, resize to 64x64 for faster training
             #transforms.CenterCrop((178, 178)),
             transforms.Resize((self.image_size, self.image_size)),
             transforms.ToTensor(),

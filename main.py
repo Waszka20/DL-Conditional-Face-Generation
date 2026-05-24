@@ -15,12 +15,12 @@ if __name__ == "__main__":
     
     TRAIN = True
     SELECTED_ATTRIBUTES = [
-    "Bald",
-    "Black_Hair",
-    "Blond_Hair",
-    "Eyeglasses",
-    "Male"
-]
+        "Bald",
+        "Black_Hair",
+        "Blond_Hair",
+        "Eyeglasses",
+        "Male"
+    ]
 
     train_dataset = CelebADataset(split="train", SELECTED_ATTRIBUTES=SELECTED_ATTRIBUTES, image_size=64)
     print(f"Dataset size: {len(train_dataset)}")
@@ -42,11 +42,11 @@ if __name__ == "__main__":
         print("Model saved to cvae.pth")
     
     selected_attrs = {
-    "Bald": 1,
+    "Bald": 0,
     "Black_Hair": 1,
-    "Blond_Hair": 1,
-    "Eyeglasses": 0,
-    "Male": 0
+    "Blond_Hair": 0,
+    "Eyeglasses": 1,
+    "Male": 1
     }
     generate_faces(
         model=model,

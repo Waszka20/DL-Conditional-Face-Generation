@@ -2,7 +2,7 @@ import torch
 from torch import nn
 import time
 
-def vae_loss(x_hat, x, mu, logvar, beta=1):
+def vae_loss(x_hat, x, mu, logvar, beta=0.1):
 
     recon = nn.functional.mse_loss(
         x_hat,

@@ -15,21 +15,26 @@ class CVAE(nn.Module):
 
 
         self.encoder = nn.Sequential(
-
+            # 3*image_size*image_size     
             nn.Conv2d(3, 32, 4, 2, 1),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
+            # 32*image_size//2*image_size//2
             nn.Conv2d(32, 64, 4, 2, 1),
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
+            # 64*image_size//4*image_size//4
             nn.Conv2d(64, 128, 4, 2, 1),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
+            # 128*image_size//8*image_size//8
             nn.Conv2d(128, 256, 4, 2, 1),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
+
+            # 256*image_size//16*image_size//16
         )
 
         # dynamic size after encoder
@@ -54,19 +59,19 @@ class CVAE(nn.Module):
 
             nn.ConvTranspose2d(256, 256, 4, 2, 1),
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
             nn.ConvTranspose2d(256, 128, 4, 2, 1),
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
             nn.ConvTranspose2d(128, 64, 4, 2, 1),
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
             nn.ConvTranspose2d(64, 32, 4, 2, 1),
             nn.BatchNorm2d(32),
-            nn.LeakyReLU(0.2),
+            nn.ReLU(),
 
             nn.Conv2d(32, 3, 3, 1, 1),
 

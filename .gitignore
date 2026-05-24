@@ -1,5 +1,5 @@
 *cache*
-cvae.pth
+*.pth
 generated/*
 .vscode/*
 generated/*

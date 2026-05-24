@@ -209,3 +209,68 @@ def edit_face_attributes(
         edited = model.decode(z, new_y)
 
     return edited
+
+
+import torch
+from PIL import Image
+import matplotlib.pyplot as plt
+from torchvision import transforms
+
+
+def reconstruct_image(model, image_path, attrs, attribute_names, device="cuda"):
+
+    model.eval()
+
+    transform = transforms.Compose([
+        transforms.Resize((64, 64)),
+        transforms.ToTensor(),
+        transforms.Normalize([0.5]*3, [0.5]*3)
+    ])
+
+    # load image
+    image = Image.open(image_path).convert("RGB")
+
+    # transform
+    x = transform(image).unsqueeze(0).to(device)
+
+    # attrs -> tensor
+    attrs = make_attribute_vector(attrs, attribute_names=attribute_names)
+    y = torch.tensor(attrs, dtype=torch.float32)\
+        .unsqueeze(0)\
+        .to(device)
+
+    with torch.no_grad():
+
+        # encode
+        mu, logvar = model.encode(x, y)
+
+        # use mean directly (clean reconstruction)
+        z = mu
+
+        # decode
+        x_hat = model.decode(z, y)
+
+    # back to cpu
+    original = x.squeeze(0).cpu()
+    reconstructed = x_hat.squeeze(0).cpu()
+
+    # denormalize
+    original = (original * 0.5 + 0.5).clamp(0, 1)
+    reconstructed = (reconstructed * 0.5 + 0.5).clamp(0, 1)
+
+    # CHW -> HWC
+    original = original.permute(1, 2, 0)
+    reconstructed = reconstructed.permute(1, 2, 0)
+
+    # show
+    fig, axes = plt.subplots(1, 2, figsize=(8, 4))
+
+    axes[0].imshow(original)
+    axes[0].set_title("Original")
+    axes[0].axis("off")
+
+    axes[1].imshow(reconstructed)
+    axes[1].set_title("Reconstructed")
+    axes[1].axis("off")
+
+    plt.show()
