@@ -4,7 +4,7 @@ import torch
 
 class CVAE(nn.Module):
 
-    def __init__(self, latent_dim=64, n_classes=5, image_size=64):
+    def __init__(self, latent_dim=256, n_classes=5, image_size=64):
 
         super().__init__()
 
@@ -17,37 +17,39 @@ class CVAE(nn.Module):
         self.encoder = nn.Sequential(
             # 3*image_size*image_size     
             nn.Conv2d(3, 32, 4, 2, 1),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             # 32*image_size//2*image_size//2
             nn.Conv2d(32, 64, 4, 2, 1),
             nn.BatchNorm2d(64),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             # 64*image_size//4*image_size//4
             nn.Conv2d(64, 128, 4, 2, 1),
             nn.BatchNorm2d(128),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             # 128*image_size//8*image_size//8
             nn.Conv2d(128, 256, 4, 2, 1),
             nn.BatchNorm2d(256),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             # 256*image_size//16*image_size//16
         )
-
-        # dynamic size after encoder
         self.feature_size = image_size // 16
 
         self.flatten_dim = 256 * self.feature_size * self.feature_size
+       
+        self.encoder_fc = nn.Sequential(
+            nn.Linear(self.flatten_dim + n_classes, 1024),
+            nn.LeakyReLU(0.2)
+        )
+        # dynamic size after encoder
+
 
         # latent
-        self.fc_mu = nn.Linear(self.flatten_dim + n_classes, latent_dim)
-
-        self.fc_logvar = nn.Linear(self.flatten_dim + n_classes, latent_dim)
-
-
+        self.fc_mu = nn.Linear(1024, latent_dim)
+        self.fc_logvar = nn.Linear(1024, latent_dim)
 
 
         self.decoder_input = nn.Linear(
@@ -59,23 +61,30 @@ class CVAE(nn.Module):
 
             nn.ConvTranspose2d(256, 256, 4, 2, 1),
             nn.BatchNorm2d(256),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             nn.ConvTranspose2d(256, 128, 4, 2, 1),
             nn.BatchNorm2d(128),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             nn.ConvTranspose2d(128, 64, 4, 2, 1),
             nn.BatchNorm2d(64),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             nn.ConvTranspose2d(64, 32, 4, 2, 1),
             nn.BatchNorm2d(32),
-            nn.ReLU(),
+            nn.LeakyReLU(0.2),
 
             nn.Conv2d(32, 3, 3, 1, 1),
 
             nn.Tanh()
+        )
+
+        self.decoder_fc = nn.Sequential(
+            nn.Linear(latent_dim + n_classes, 1024),
+            nn.LeakyReLU(0.2),
+            nn.Linear(1024, self.flatten_dim),
+            nn.LeakyReLU(0.2)
         )
 
     def encode(self, x, y):
@@ -86,6 +95,7 @@ class CVAE(nn.Module):
 
         h = torch.cat([h, y], dim=1)
 
+        h = self.encoder_fc(h)
         mu = self.fc_mu(h)
         logvar = self.fc_logvar(h)
 
@@ -103,7 +113,7 @@ class CVAE(nn.Module):
 
         h = torch.cat([z, y], dim=1)
 
-        h = self.decoder_input(h)
+        h = self.decoder_fc(h)
 
         h = h.view(
             -1,
@@ -129,7 +139,7 @@ class CVAE(nn.Module):
 
 
 class CVAE2(nn.Module):
-    def __init__(self, latent_dim=128, n_classes=40, image_size=64):
+    def __init__(self, latent_dim=256, n_classes=40, image_size=64):
         super().__init__()
         self.n_classes = n_classes
         self.image_size = image_size

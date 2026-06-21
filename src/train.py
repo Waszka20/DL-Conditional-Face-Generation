@@ -20,7 +20,7 @@ def vae_loss(x_hat, x, mu, logvar, beta=0.1):
     return recon + beta * kl, recon, kl
 
 
-def evaluate_model(model, data_loader, device):
+def evaluate_model(model, data_loader, device, beta=0.1):
     """Compute reconstruction and KL loss on a data loader (no grad)."""
     model.eval()
 
@@ -36,7 +36,7 @@ def evaluate_model(model, data_loader, device):
 
             x_hat, mu, logvar = model(x, attributes)
 
-            loss, recon, kl = vae_loss(x_hat, x, mu, logvar)
+            loss, recon, kl = vae_loss(x_hat, x, mu, logvar, beta=beta)
 
             batch_size = x.size(0)
             total_loss += loss.item() * batch_size
@@ -65,16 +65,13 @@ def train_model(
     device,
     epochs=10,
     val_loader=None,
-    checkpoint_dir="checkpoints",
-    checkpoint_every=1,
     beta=0.1,
 ):
-    """Train VAE model with optional validation and checkpointing.
+    """Train VAE model with optional validation.
 
     Returns training history dict containing train/val losses per epoch.
     """
 
-    os.makedirs(checkpoint_dir, exist_ok=True)
 
     history = {
         "train_loss": [],
@@ -85,12 +82,18 @@ def train_model(
         "val_kl": []
     }
 
-    best_val = float("inf")
     all_time = time.time()
+
+    warmup_epochs = 5
 
     for epoch in range(epochs):
 
         model.train()
+
+        current_beta = min(
+            beta,
+            beta * (epoch + 1) / warmup_epochs
+        )
 
         total_loss = 0.0
         total_recon = 0.0
@@ -106,7 +109,7 @@ def train_model(
 
             x_hat, mu, logvar = model(x, attributes)
 
-            loss, recon, kl = vae_loss(x_hat, x, mu, logvar, beta=beta)
+            loss, recon, kl = vae_loss(x_hat, x, mu, logvar, beta=current_beta)
 
             loss.backward()
 
@@ -129,7 +132,7 @@ def train_model(
 
         val_metrics = None
         if val_loader is not None:
-            val_metrics = evaluate_model(model, val_loader, device)
+            val_metrics = evaluate_model(model, val_loader, device, beta=current_beta)
             history["val_loss"].append(val_metrics["loss"]) 
             history["val_recon"].append(val_metrics["recon"]) 
             history["val_kl"].append(val_metrics["kl"]) 
@@ -155,33 +158,6 @@ def train_model(
                 f"Val KL: {val_metrics['kl']:.4f}"
             )
 
-            # checkpoint best
-            if val_metrics["loss"] is not None and val_metrics["loss"] < best_val:
-                best_val = val_metrics["loss"]
-                ckpt_path = os.path.join(checkpoint_dir, "best.pth")
-                torch.save({
-                    "model": model.state_dict(),
-                    "optimizer": optimizer.state_dict(),
-                    "epoch": epoch + 1,
-                    "history": history
-                }, ckpt_path)
-                print(f"Saved best checkpoint to: {ckpt_path}")
-
-        # periodic checkpoint
-        if (epoch + 1) % checkpoint_every == 0:
-            ckpt_path = os.path.join(checkpoint_dir, f"epoch_{epoch+1}.pth")
-            torch.save({
-                "model": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "epoch": epoch + 1,
-                "history": history
-            }, ckpt_path)
-
     print(f"Total training time: {time.time() - all_time:.2f}s")
-
-    # save history
-    hist_path = os.path.join(checkpoint_dir, "history.json")
-    with open(hist_path, "w") as f:
-        json.dump(history, f, indent=2)
 
     return history
