@@ -1,0 +1,10 @@
+numpy<2
+torch
+torchvision
+pandas
+Pillow
+matplotlib==3.7.2
+scikit-learn
+tqdm
+kagglehub
+pytorch-fid
